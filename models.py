@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, EmailStr, validator
+import hashlib
 
 class SurveySubmission(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
@@ -8,7 +9,9 @@ class SurveySubmission(BaseModel):
     age: int = Field(..., ge=13, le=120)
     consent: bool = Field(..., description="Must be true to accept")
     rating: int = Field(..., ge=1, le=5)
+    user_agent: Optional[str] = None
     comments: Optional[str] = Field(None, max_length=1000)
+    submission_id: Optional[str] = None
   
 
     @validator("comments")
@@ -21,6 +24,32 @@ class SurveySubmission(BaseModel):
             raise ValueError("consent must be true")
         return v
         
+    @validator("email")
+    def hash_email(cls, v):
+        """Hash email for PII protection"""
+        return hashlib.sha256(str(v).encode()).hexdigest()
+    
+    @validator("age")
+    def hash_age(cls, v):
+        """Hash age for PII protection"""
+        return hashlib.sha256(str(v).encode()).hexdigest()
+    
+    # Exercise 3: Generate submission_id if not provided
+    @validator("submission_id", always=True)
+    def generate_submission_id(cls, v, values):
+        """Generate submission_id if not provided"""
+        if v:  # If submission_id is already provided, keep it
+            return v
+        
+        # Generate from hashed email + current date/hour
+        email = values.get('email', '')
+        if email:
+            current_time = datetime.utcnow().strftime('%Y%m%d%H')
+            combined = f"{email}{current_time}"
+            return hashlib.sha256(combined.encode()).hexdigest()
+        
+        return None
+
 #Good example of inheritance
 class StoredSurveyRecord(SurveySubmission):
     received_at: datetime
