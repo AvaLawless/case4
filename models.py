@@ -17,7 +17,7 @@ class SurveySubmission(BaseModel):
 
     @validator("comments")
     def _strip_comments(cls, v):
-        return v.strip() if v else v
+        return v.strip() if isinstance(v, str) else v
 
     @validator("consent")
     def _must_consent(cls, v):
@@ -36,7 +36,7 @@ class StoredSurveyRecord(BaseModel):
     hashed_age: str
     consent: bool 
     rating: int 
-    user_agent: Optional[str] = None
-    comments: Optional[str] = None
+    user_agent: Optional[str]
+    comments: Optional[str]
     source: Literal["homepage", "email", "qr", "other"] = "other"
     submission_id: str 
