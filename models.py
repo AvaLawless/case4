@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field, EmailStr, validator
 import hashlib
 
@@ -7,10 +7,11 @@ class SurveySubmission(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
     age: int = Field(..., ge=13, le=120)
-    consent: bool = Field(..., description="Must be true to accept")
+    consent: bool
     rating: int = Field(..., ge=1, le=5)
     user_agent: Optional[str] = None
     comments: Optional[str] = Field(None, max_length=1000)
+    source: Literal["homepage", "email", "qr", "other"] = "other"
     submission_id: Optional[str] = None
   
 
@@ -36,5 +37,6 @@ class StoredSurveyRecord(BaseModel):
     consent: bool 
     rating: int 
     user_agent: Optional[str] = None
-    comments: Optional[str] 
-    submission_id: Optional[str] = None
+    comments: Optional[str] = None
+    source: Literal["homepage", "email", "qr", "other"] = "other"
+    submission_id: str 
