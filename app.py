@@ -36,6 +36,9 @@ def submit_survey():
     email_norm = submission.email.strip().lower()
     hashed_email = sha256.hex(email_norm)
     hashed_age = sha256.hex(str(submission.age))
+
+    hour_stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H")
+    submission_id = submission.submission_id or sha256_hex(email_norm + hour_stamp)
     
     record = StoredSurveyRecord(
         name=submission.name,
@@ -45,8 +48,8 @@ def submit_survey():
         source=submission.source,
         user_agent=submission.user_agent,
 
-        hashed_email = sha256.hex(email_norm),
-        hashed_age = sha256.hex(str(submission.age)),
+        hashed_email = hashed_email,
+        hashed_age = hashed_age,
         submission_id=submission_id,
     
         received_at=datetime.now(timezone.utc),
