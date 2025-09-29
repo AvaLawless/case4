@@ -1,9 +1,13 @@
+import hashlib 
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pydantic import ValidationError
 from models import SurveySubmission, StoredSurveyRecord
 from storage import append_json_line
+
+def sha256_hex(s: str) -> str:
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 app = Flask(__name__)
 # Allow cross-origin requests so the static HTML can POST from localhost or file://
@@ -28,9 +32,23 @@ def submit_survey():
         submission = SurveySubmission(**payload)
     except ValidationError as ve:
         return jsonify({"error": "validation_error", "detail": ve.errors()}), 422
-
+    
+    email_norm = submission.email.strip().lower()
+    hashed_email = sha256.hex(email_norm)
+    hashed_age = sha256.hex(str(submission.age))
+    
     record = StoredSurveyRecord(
-        **submission.dict(),
+        name=submission.name,
+        consent=submission.consent,
+        rating=submission.rating,
+        comments=submission.comments,
+        source=submission.source,
+        user_agent=submission.user_agent,
+
+        hashed_email = sha256.hex(email_norm),
+        hashed_age = sha256.hex(str(submission.age)),
+        submission_id=submission_id,
+    
         received_at=datetime.now(timezone.utc),
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
