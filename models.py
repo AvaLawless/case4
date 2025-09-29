@@ -24,39 +24,15 @@ class SurveySubmission(BaseModel):
             raise ValueError("consent must be true")
         return v
         
-    @validator("email")
-    def hash_email(cls, v):
-        """Hash email for PII protection"""
-        return hashlib.sha256(str(v).encode()).hexdigest()
-    
-    @validator("age")
-    def hash_age(cls, v):
-        """Hash age for PII protection"""
-        return hashlib.sha256(str(v).encode()).hexdigest()
-    
-    # Exercise 3: Generate submission_id if not provided
-    @validator("submission_id", always=True)
-    def generate_submission_id(cls, v, values):
-        """Generate submission_id if not provided"""
-        if v:  # If submission_id is already provided, keep it
-            return v
-        
-        # Generate from hashed email + current date/hour
-        email = values.get('email', '')
-        if email:
-            current_time = datetime.utcnow().strftime('%Y%m%d%H')
-            combined = f"{email}{current_time}"
-            return hashlib.sha256(combined.encode()).hexdigest()
-        
-        return None
+       
 
 #Good example of inheritance
 class StoredSurveyRecord(BaseModel):
     received_at: datetime
     ip: str
     name: str 
-    email: EmailStr
-    age: int  
+    hashed_email: str
+    hashed_age: str
     consent: bool 
     rating: int 
     user_agent: Optional[str] = None
